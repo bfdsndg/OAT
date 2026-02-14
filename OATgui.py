@@ -1,8 +1,6 @@
 '''
 OATgui 的 Docstring
-在目前版本中未添加的部分
 '''
-
 
 from PySide2.QtWidgets import QApplication, QWidget, QMessageBox
 from PySide2.QtUiTools import QUiLoader
@@ -116,15 +114,14 @@ class OATgui():
         
         self.main_thread = Running()
         
-        # self.main_thread.log_signal.connect(self.log_error)
         self.main_thread.error_signal.connect(self.log_error)
         self.main_thread.finish_signal.connect(lambda: QMessageBox.information(self.ui, "完成", "ADB操作执行完毕！"))
         
         self.main_thread.start()
-        # self.log_error("子线程已启动，UI可正常操作")
             
 
 app = QApplication([])
 appui = OATgui()
 appui.ui.show()
+
 app.exec_()
