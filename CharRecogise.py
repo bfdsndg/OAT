@@ -215,15 +215,7 @@ class Core:
             txts.append(text)
             scores.append(confidence)
 
-        # print(2)
-        # print(text_results)# and os.path.exists(font_path))
-        # # 生成标注图
-        # if text_results and os.path.exists(font_path):
-        #     annotated_img = Core.draw_ocr(img, boxes, txts, scores, font_path, drop_score)
-        #     annotated_path = os.path.splitext(img_path)[0] + "_annotated.png"
-        #     cv2.imwrite(annotated_path, annotated_img)
-        #     print(f"标注图已保存：{annotated_path}")
-
         return text_results
+
 
 
