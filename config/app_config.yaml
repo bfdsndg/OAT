@@ -1,0 +1,21 @@
+adb:
+  path: D:\Apps\ARK\YXArkNights-12.0\shell\adb.exe
+  port: 16384
+limit:
+  group: 4
+acc:
+  level: 5
+resource:
+  asset_path: Asset
+  screenshot_path: ScreenShotsource/source.png
+  font_path: DENG.TTF
+  ui_path: OATg.ui
+threshold:
+  image_match: 0.85
+  text_recog: 0.5
+delay:
+  consider_break: 1.5
+  short_break: 3
+  mid_break: 5
+  long_break: 30
+  Wait_time: 120
