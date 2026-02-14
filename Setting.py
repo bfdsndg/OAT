@@ -14,7 +14,6 @@ def get_resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         base_path = sys._MEIPASS
     else:
-        # 开发环境，基于当前脚本所在目录
         base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 
@@ -24,9 +23,7 @@ def get_exe_dir():
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
-# ================ 初始化日志 ==================
 def init_logger():
-    # 日志目录：打包后放到EXE同目录
     if getattr(sys, 'frozen', False):
         log_dir = os.path.join(os.path.dirname(sys.executable), "logs")
     else:
@@ -44,14 +41,12 @@ def init_logger():
         ]
     )
     logger = logging.getLogger("auto_tool")
-    # 打印路径信息，方便排查
     logger.info(f"程序运行目录：{os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))}")
     logger.info(f"资源根目录：{get_resource_path('')}")
     return logger
 
 logger = init_logger()
 
-# ======================= 加载配置 ===================
 def load_config():
     # 外部配置路径（EXE同目录的config文件夹）
     exe_dir = get_exe_dir()
@@ -68,14 +63,10 @@ def load_config():
 3. 重启程序。
 当前缺失的配置文件路径：{external_config_path}
         """
-        # 控制台输出
         print(error_msg)
-        # 日志记录
         logger.fatal(error_msg)
-        # 终止程序
         sys.exit(1)
 
-    # 读取外部配置
     logger.info(f"加载用户自定义配置：{external_config_path}")
     with open(external_config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -86,19 +77,19 @@ def load_config():
 
 CONFIG = load_config()
 
-# =================== 检查资源/ADB可用性 ================
 def check_env():
-    # 检查ADB路径（配置文件中用绝对路径，如D:\Apps\adb\adb.exe）
+    # 配置文件中用绝对路径，如D:\Apps\adb\adb.exe
     if not os.path.exists(CONFIG["adb"]["path"]):
         logger.error(f"ADB路径无效：{CONFIG['adb']['path']}\n提示：请检查config/app_config.yaml中的adb.path配置")
         return False
-    # 检查Asset资源（get_resource_path修复）
+    # 检查Asset资源
     if not os.path.exists(CONFIG["resource"]["asset_path"]):
         logger.error(f"Asset资源文件夹不存在：{CONFIG['resource']['asset_path']}\n提示：请检查.spec文件是否打包了Asset文件夹，或配置文件中的asset_path是否正确")
         return False
-    # 检查字体文件（已修复）
+    # 检查字体文件
     if not os.path.exists(CONFIG["resource"]["font_path"]):
         logger.error(f"字体文件不存在：{CONFIG['resource']['font_path']}\n提示：请检查.spec文件是否打包了字体文件，或配置文件中的font_path是否正确")
         return False
     logger.info("环境检查通过")
+
     return True
