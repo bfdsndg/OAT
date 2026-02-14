@@ -30,7 +30,6 @@ class Com:
         template_path = get_resource_path(template_path)
         template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
         if template is None:
-            # 打印错误日志，方便排查
             raise FileNotFoundError(f"无法读取图片：{template_path}\n请检查：1. .spec是否打包了Asset文件夹 2. 图片路径是否正确")
         verify_img = cv2.imread(verify_img_path, cv2.IMREAD_GRAYSCALE)
 
@@ -47,12 +46,10 @@ class Com:
     
         template_h, template_w = template.shape[:2]
     
-        # 执行模板匹配
         match_result = cv2.matchTemplate(activity_roi, template, cv2.TM_CCOEFF_NORMED)
     
         max_match_val = np.max(match_result)
         if max_match_val < match_threshold:
-            # print(f"识别失败")
             return False, None
     
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(match_result)
@@ -62,7 +59,6 @@ class Com:
         global_y = y_start + roi_y + template_h // 2
         target_pos = (global_x, global_y)
 
-        # print(f"匹配成功")
         return True, target_pos
     
     @staticmethod
@@ -81,17 +77,9 @@ class Com:
         :return: 注意第二项返回值
         """
 
-        # if os.path.exists(r"ScreenShotsource\source.png") and os.path.getsize(r"ScreenShotsource\source.png") > 0:
-        #     print("source.png exists")
-        # else:
-        #     print("source.png not exists")
-        #     return False, None
-        # print(template_path,verify_img_path)
-        # logger.info(f"开始匹配按钮：{template_path} {verify_img_path} ")
         template_path = get_resource_path(template_path)
         template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
         if template is None:
-            # 打印错误日志
             raise FileNotFoundError(f"无法读取图片：{template_path}\n请检查：1. .spec是否打包了Asset文件夹 2. 图片路径是否正确")
         verify_img = cv2.imread(verify_img_path, cv2.IMREAD_GRAYSCALE)
 
@@ -111,7 +99,6 @@ class Com:
 
         max_match_val = np.max(match_result)
         if max_match_val < match_threshold:
-            # print(f"识别失败")
             return False, None
     
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(match_result)
@@ -121,6 +108,6 @@ class Com:
         global_y = y_start + roi_y + template_h // 2
         target_pos = (global_x, global_y)
 
-        # print(f"匹配成功")
         return True, target_pos
+
 
