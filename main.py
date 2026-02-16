@@ -363,15 +363,6 @@ def Main():
     End = False
     adb_path_input = CONFIG["adb"]["path"]
     adb_port_input = CONFIG["adb"]["port"]
-    try:
-        res = subprocess.check_output([adb_path_input, "devices"], timeout=2)
-        if f"127.0.0.1:{adb_port_input}" not in res.decode('utf-8', errors='ignore'):
-            logger.error("模拟器未连接，终止")
-            return  
-    except Exception as e:
-        logger.error(f"ADB命令执行失败，错误信息：{e}")
-        logger.error("ADB命令执行失败，终止")
-        return
     exe_dir = get_exe_dir()
     save_path = os.path.join(exe_dir, CONFIG["resource"]["screenshot_path"])
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -504,4 +495,5 @@ def Main():
 
 
 if __name__ == "__main__":
+
     Main()
