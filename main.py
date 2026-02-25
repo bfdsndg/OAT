@@ -13,6 +13,7 @@ from concurrent import futures
 import datetime
 import threading # 其实不用多线程还根高效，或者是我没想好怎么用，考虑在第三版的复用
 import subprocess
+from Three_side_act import side_actions
 
 CONSIDER_BREAK = CONFIG["delay"]["consider_break"]  
 SHORT_BREAK = CONFIG["delay"]["short_break"]
@@ -21,12 +22,12 @@ LONG_BREAK = CONFIG["delay"]["long_break"]
 WAIT_TIME = CONFIG["delay"]["Wait_time"]
 LIMIT_GROUP = CONFIG["limit"]["group"] 
 ACC_LEVEL = CONFIG["acc"]["level"]
+ART_BREAK = CONFIG["delay"]["art_break"]
 
 """
 OATg 第二版放弃了识别时间的写法，改成了采用固定时间的思路
+计划加入识别扫荡完毕与移动
 """
-
-
 
 def Where_I_am(adb_path_input: str, adb_port_input: int, save_path: str = CONFIG["resource"]["screenshot_path"]) -> str:
     logger.info("===========Where_I_am开始执行============")
@@ -188,7 +189,7 @@ def create_folder(folder_name="ahh"):
     """
     current_path = os.getcwd()
     create_path = os.path.join(current_path, "Shoot")
-    folder_path = os.path.join(create_path, folder_name)
+    folder_path = os.path.join(create_path, folder_name) 
     
     try:
         os.makedirs(folder_path, exist_ok=True)
@@ -214,8 +215,10 @@ def check_png(times:int,adb_path_input:str,adb_port_input:int,save_path=CONFIG["
         print(f"图片处理错误: {e}")
         return False
     
-def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_list:list,G_list_M:list,save_path=CONFIG["resource"]["screenshot_path"])->tuple:
-    """一个循环,return None 表示失败"""
+def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_list:list,G_list_M:list,save_path=CONFIG["resource"]["screenshot_path"],current_side="center")->tuple:
+    """一个循环,return None 表示失败"""    
+    exe_dir = get_exe_dir()
+    save_path_1 = os.path.join(exe_dir, CONFIG["resource"]["screenshot_path_1"])
     # 主堡判断
     Judge1 = check_only_quick(times,adb_path_input,adb_port_input,"House",save_path)
     Judge2 = check_only_quick(times,adb_path_input,adb_port_input,"Search",save_path)
@@ -226,9 +229,21 @@ def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_lis
         logger.info("处于主城状态")
     if Judge2 == False:
         logger.error("我是谁？我在哪？我要干什么？")
-        return None,None
-
+        return None,None,current_side   
     time.sleep(SHORT_BREAK)
+
+    if current_side in side_actions:
+        if current_side == "center":
+            pass
+        elif current_side == "up":
+            side_actions[current_side](adb_path_input,adb_port_input)
+        elif current_side == "down":
+            side_actions[current_side](adb_path_input,adb_port_input)
+        elif current_side == "right":
+            side_actions[current_side](adb_path_input,adb_port_input)
+        else:
+            logger.error("当前位置不明")
+            return None,None,current_side
         # 搜索：
     Judge1 = check_click(times,adb_path_input,adb_port_input,"Search",save_path)
     if not Judge1:
@@ -250,7 +265,23 @@ def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_lis
         Click.click.adb_click(606,663,adb_path_input,adb_port_input)
         logger.info("点击确定搜索成功")
 
-        time.sleep(SHORT_BREAK)
+        time.sleep(ART_BREAK)
+        ADBScreenShot.Core.adb_screenshot(save_path_1,adb_path_input,adb_port_input)
+
+        finish, _ =Compare.Com.match_button_slide("Asset\\Noinfo.png",CONFIG["resource"]["screenshot_path_1"]
+                                         ,Dic.Dic.dictionary["Noinfo.png"][0],Dic.Dic.dictionary["Noinfo.png"][1],0.85)
+        logger.info(f"搜索结果：{'未找到目标' if finish else '找到目标'}")
+        if finish:
+            if current_side in side_actions:
+                if current_side == "center":
+                    current_side = "up"
+                elif current_side == "up":
+                    current_side = "down"
+                elif current_side == "down":
+                    current_side = "right"
+                elif current_side == "right":
+                    return -1,None,current_side
+        
 
         # 进入是否已打识别
         Circle, G_list = GLre.Core.check_have_attack(G_list,adb_path_input,adb_port_input,save_path)
@@ -262,7 +293,7 @@ def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_lis
         G_list_M = G_list.copy()
         time.sleep(CONSIDER_BREAK)  
     if Judge2==False:
-        return None,None
+        return None,None,current_side
     
     # (962,534)->点击一个魔兽
     Click.click.adb_click(962,534,adb_path_input,adb_port_input)
@@ -272,7 +303,7 @@ def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_lis
     Judge1 = check_click(times,adb_path_input,adb_port_input,"Attack",save_path)
     if not Judge1:
         logger.error("点击扫荡失败")
-        return None,None
+        return None,None,current_side
 
     time.sleep(CONSIDER_BREAK)  
 
@@ -280,7 +311,7 @@ def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_lis
     Judge1 = check_click(times,adb_path_input,adb_port_input,"Right_attack",save_path)
     if not Judge1:
         logger.error("点击右侧扫荡失败")
-        return None,None
+        return None,None,current_side
     attack += 1
     logger.info("点击扫荡成功")
 
@@ -288,10 +319,10 @@ def One_Circle(times:int, adb_path_input:str,adb_port_input:int,attack:int,G_lis
 
     quit = Back_to_Main(0, adb_path_input,adb_port_input)
     if quit == False:
-        return None,None
+        return None,None,current_side
     time.sleep(SHORT_BREAK)
 
-    return attack, G_list
+    return attack, G_list,current_side
 
 def Mili_uppppp(adb_path_input:str,adb_port_input:int,used:int,
                 times:int,save_path=CONFIG["resource"]["screenshot_path"]):
@@ -363,6 +394,15 @@ def Main():
     End = False
     adb_path_input = CONFIG["adb"]["path"]
     adb_port_input = CONFIG["adb"]["port"]
+    # try:
+    #     res = subprocess.check_output([adb_path_input, "devices"], timeout=2)
+    #     if f"127.0.0.1:{adb_port_input}" not in res.decode('utf-8', errors='ignore'):
+    #         logger.error("模拟器未连接，终止")
+    #         return  
+    # except Exception as e:
+    #     logger.error(f"ADB命令执行失败，错误信息：{e}")
+    #     logger.error("ADB命令执行失败，终止")
+    #     return
     exe_dir = get_exe_dir()
     save_path = os.path.join(exe_dir, CONFIG["resource"]["screenshot_path"])
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -384,6 +424,7 @@ def Main():
     callfinish = False
     positive_nums = []
     last_nums = 0
+    current_side = "center" # 记录当前所在位置，默认为主城
     if Judge == False:
         logger.error("...程序结束，截图或者分辨率有误...")
         End = True
@@ -411,7 +452,7 @@ def Main():
             if _ is not None: # 意味着主堡没编队但是在外又存在编队
                 Circle = False # 我需要记录used的值，用在减法上面，进入逻辑2，又好像不用
                 break
-            attack, G_list = One_Circle(times,adb_path_input,adb_port_input,attack,G_list,G_list_M,save_path)
+            attack, G_list,current_side = One_Circle(times,adb_path_input,adb_port_input,attack,G_list,G_list_M,save_path,current_side)
             if G_list is None:
                 G_list = G_list_M.copy()
             if attack is not None:
@@ -422,6 +463,11 @@ def Main():
                 logger.info("Circle环节...重新循环...")
                 # End = True
                 break
+
+            if attack == -1:
+                End = True
+                break
+
             time.sleep(CONSIDER_BREAK)
             times += 1
             pass
@@ -472,7 +518,7 @@ def Main():
                     inner_times = 0 # 我需要记录used的值，用在减法上面，进入逻辑2
                     break
 
-                attack, G_list = One_Circle(times,adb_path_input,adb_port_input,attack,G_list,G_list_M,save_path)
+                attack, G_list,current_side = One_Circle(times,adb_path_input,adb_port_input,attack,G_list,G_list_M,save_path,current_side)
                 if G_list is None:
                     G_list = G_list_M.copy()
                 if attack is not None:
@@ -495,5 +541,4 @@ def Main():
 
 
 if __name__ == "__main__":
-
     Main()
